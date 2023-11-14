@@ -4,6 +4,8 @@ const User = require('../models/userModel');
 const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const validateMongoDbId = require('../utils/validateMongoDbId');
+const sendEmail = require('./emailController');
+const crypto = require('crypto');
 
 const createUser = asyncHandler(async (req, res) => {
     const email = req.body.email;
@@ -194,6 +196,44 @@ const changePassword = asyncHandler(async (req, res) => {
     }
 });
 
+const forgotPasswordToken = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    console.log(email);
+    const findUser = await User.findOne({ email });
+    if (!findUser) throw new Error('User not found with this email');
+    try {
+        const token = await findUser.createPasswordResetToken();
+        await findUser.save();
+        const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid till 10 minutes from now. <a href='http://localhost:5000/api/user/reset-password/${token}'>Click Here</>`;
+        const data = {
+            to: email,
+            text: 'Hey User',
+            subject: 'Forgot Password Link',
+            html: resetURL,
+        };
+        sendEmail(data);
+        res.json(token);
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+    const { password } = req.body;
+    const { token } = req.params;
+    const hashToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await User.findOne({
+        passwordResetToken: hashToken,
+        passwordResetExpires: { $gt: Date.now() },
+    });
+    if (!user) throw new Error('Token Expired!');
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+    res.json(user);
+});
+
 module.exports = {
     createUser,
     loginUser,
@@ -205,5 +245,7 @@ module.exports = {
     unBlockUser,
     handleRefreshToken,
     changePassword,
+    forgotPasswordToken,
+    resetPassword,
     logout,
 };

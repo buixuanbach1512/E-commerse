@@ -1,7 +1,11 @@
 const { json } = require('body-parser');
 const Product = require('../models/productModel');
+const User = require('../models/userModel');
 const asyncHandler = require('express-async-handler');
 const slugify = require('slugify');
+const validateMongoDbId = require('../utils/validateMongoDbId');
+const cloudinaryUploadImg = require('../utils/cloundinary');
+const fs = require('fs');
 
 const createProduct = asyncHandler(async (req, res) => {
     try {
@@ -84,6 +88,84 @@ const updateProduct = asyncHandler(async (req, res) => {
     }
 });
 
+const addToWishlist = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { prodId } = req.body;
+    try {
+        const user = await User.findById(_id);
+        const alreadyadded = user.wishlist.find((id) => id.toString() === prodId);
+        if (alreadyadded) {
+            let user = await User.findByIdAndUpdate(
+                _id,
+                {
+                    $pull: { wishlist: prodId },
+                },
+                {
+                    new: true,
+                },
+            );
+            res.json(user);
+        } else {
+            let user = await User.findByIdAndUpdate(
+                _id,
+                {
+                    $push: { wishlist: prodId },
+                },
+                {
+                    new: true,
+                },
+            );
+            res.json(user);
+        }
+    } catch (error) {
+        throw new Error(error);
+    }
+});
+
+const rating = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { star, prodId, comment } = req.body;
+    try {
+        const product = await Product.findById(prodId);
+        let alreadyRated = product.ratings.find((userId) => userId.postedBy.toString() === _id.toString());
+        if (alreadyRated) {
+            const updateRating = await Product.updateOne(
+                {
+                    ratings: { $elemMatch: alreadyRated },
+                },
+                {
+                    $set: { 'ratings.$.star': star, 'ratings.$.comment': comment },
+                },
+                {
+                    new: true,
+                },
+            );
+        } else {
+            const rateProduct = await Product.findByIdAndUpdate(
+                prodId,
+                {
+                    $push: { ratings: { star: star, postedBy: _id, comment: comment } },
+                },
+                { new: true },
+            );
+        }
+        const getAllRatings = await Product.findById(prodId);
+        let totalRating = getAllRatings.ratings.length;
+        let ratingsum = getAllRatings.ratings.map((item) => item.star).reduce((prev, curr) => prev + curr, 0);
+        let actualRating = Math.round(ratingsum / totalRating);
+        let allProduct = await Product.findByIdAndUpdate(
+            prodId,
+            {
+                totalRating: actualRating,
+            },
+            { new: true },
+        );
+        res.json(allProduct);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
+
 const deleteProduct = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params;
@@ -96,4 +178,41 @@ const deleteProduct = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { createProduct, getAProduct, getAllProduct, updateProduct, deleteProduct };
+const uploadImage = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    validateMongoDbId(id);
+    try {
+        const uploader = (path) => cloudinaryUploadImg(path, 'images');
+        const urls = [];
+        const files = req.files;
+        for (const file of files) {
+            const { path } = file;
+            const newpath = await uploader(path);
+            urls.push(newpath);
+            fs.unlinkSync(path);
+        }
+        const findProduct = await Product.findByIdAndUpdate(
+            id,
+            {
+                image: urls.map((file) => {
+                    return file;
+                }),
+            },
+            { new: true },
+        );
+        res.json(findProduct);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
+
+module.exports = {
+    createProduct,
+    getAProduct,
+    getAllProduct,
+    updateProduct,
+    deleteProduct,
+    addToWishlist,
+    rating,
+    uploadImage,
+};
