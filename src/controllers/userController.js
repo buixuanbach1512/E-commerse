@@ -46,6 +46,35 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 });
 
+const loginAdmin = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+    const findAdmin = await User.findOne({ email });
+    if (findAdmin && (await findAdmin.isPasswordMatched(password))) {
+        if (findAdmin.role !== 'admin') throw new Error('Not Authorised');
+        const refreshToken = await generateRefreshToken(findAdmin?._id);
+        const updateUser = await User.findByIdAndUpdate(
+            findAdmin._id,
+            {
+                refreshToken: refreshToken,
+            },
+            { new: true },
+        );
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            maxAge: 72 * 60 * 60 * 1000,
+        });
+        res.json({
+            _id: findAdmin?._id,
+            name: findAdmin?.name,
+            email: findAdmin?.email,
+            mobile: findAdmin?.mobile,
+            token: generateToken(findAdmin?._id),
+        });
+    } else {
+        throw new Error('Invalid Credentials');
+    }
+});
+
 // handle refresh token
 const handleRefreshToken = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
@@ -234,9 +263,40 @@ const resetPassword = asyncHandler(async (req, res) => {
     res.json(user);
 });
 
+const getWishList = asyncHandler(async (req, res) => {
+    try {
+        const { _id } = req.user;
+        validateMongoDbId(_id);
+        const findUser = await User.findById(_id).populate('wishlist');
+        res.json(findUser);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
+
+const saveAddress = asyncHandler(async (req, res) => {
+    try {
+        const { _id } = req.user;
+        validateMongoDbId(_id);
+        const updateUser = await User.findByIdAndUpdate(
+            { _id },
+            {
+                address: req?.body.address,
+            },
+            {
+                new: true,
+            },
+        );
+        res.json(updateUser);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
+
 module.exports = {
     createUser,
     loginUser,
+    loginAdmin,
     getAllUser,
     getOneUser,
     deleteUser,
@@ -247,5 +307,7 @@ module.exports = {
     changePassword,
     forgotPasswordToken,
     resetPassword,
+    getWishList,
+    saveAddress,
     logout,
 };
