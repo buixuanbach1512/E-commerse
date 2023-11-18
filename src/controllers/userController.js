@@ -37,7 +37,7 @@ const loginUser = asyncHandler(async (req, res) => {
         );
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            maxAge: 72 * 60 * 60 * 1000,
+            maxAge: 12 * 60 * 60 * 1000,
         });
         res.json({
             _id: findUser?._id,
@@ -417,11 +417,20 @@ const createOrder = asyncHandler(async (req, res) => {
     }
 });
 
+const getAllOrder = asyncHandler(async (req, res) => {
+    try {
+        const allOrder = await Order.find().populate('products.product').populate('orderBy').exec();
+        res.json(allOrder);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
+
 const getOrder = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     validateMongoDbId(_id);
     try {
-        const order = await Order.findOne({ orderBy: _id }).populate('products.product').exec();
+        const order = await Order.findOne({ orderBy: _id }).populate('products.product').populate('orderBy').exec();
         res.json(order);
     } catch (e) {
         throw new Error(e);
@@ -437,9 +446,7 @@ const updateOrder = asyncHandler(async (req, res) => {
             id,
             {
                 orderStatus: status,
-                paymentIntent: {
-                    status: status,
-                },
+                $set: { 'paymentIntent.status': status },
             },
             { new: true },
         );
@@ -470,6 +477,7 @@ module.exports = {
     emptyCart,
     applyCoupon,
     createOrder,
+    getAllOrder,
     getOrder,
     updateOrder,
     logout,

@@ -177,33 +177,33 @@ const deleteProduct = asyncHandler(async (req, res) => {
     }
 });
 
-const uploadImage = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    validateMongoDbId(id);
-    try {
-        const uploader = (path) => cloudinaryUploadImg(path, 'images');
-        const urls = [];
-        const files = req.files;
-        for (const file of files) {
-            const { path } = file;
-            const newpath = await uploader(path);
-            urls.push(newpath);
-            fs.unlinkSync(path);
-        }
-        const findProduct = await Product.findByIdAndUpdate(
-            id,
-            {
-                image: urls.map((file) => {
-                    return file;
-                }),
-            },
-            { new: true },
-        );
-        res.json(findProduct);
-    } catch (e) {
-        throw new Error(e);
-    }
-});
+// const uploadImage = asyncHandler(async (req, res) => {
+//     const { id } = req.params;
+//     validateMongoDbId(id);
+//     try {
+//         const uploader = (path) => cloudinaryUploadImg(path, 'images');
+//         const urls = [];
+//         const files = req.files;
+//         for (const file of files) {
+//             const { path } = file;
+//             const newpath = await uploader(path);
+//             urls.push(newpath);
+//             fs.unlinkSync(path);
+//         }
+//         const findProduct = await Product.findByIdAndUpdate(
+//             id,
+//             {
+//                 image: urls.map((file) => {
+//                     return file;
+//                 }),
+//             },
+//             { new: true },
+//         );
+//         res.json(findProduct);
+//     } catch (e) {
+//         throw new Error(e);
+//     }
+// });
 
 module.exports = {
     createProduct,
@@ -213,5 +213,5 @@ module.exports = {
     deleteProduct,
     addToWishlist,
     rating,
-    uploadImage,
+    // uploadImage,
 };

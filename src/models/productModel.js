@@ -27,8 +27,8 @@ var productSchema = new mongoose.Schema(
             ref: 'Category',
         },
         brand: {
-            type: String,
-            enum: ['Adidas', 'Nike', 'LV'],
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Brand',
         },
         sold: {
             type: Number,
@@ -38,11 +38,19 @@ var productSchema = new mongoose.Schema(
             type: Number,
             require: true,
         },
-        image: [],
-        color: {
-            type: String,
-            enum: ['Blue', 'Black', 'Red'],
-        },
+        images: [
+            {
+                public_id: String,
+                url: String,
+            },
+        ],
+        color: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Color',
+            },
+        ],
+        tags: String,
         ratings: [
             {
                 star: Number,
