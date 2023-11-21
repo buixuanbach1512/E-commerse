@@ -10,7 +10,7 @@ const {
 } = require('../controllers/categoryController');
 
 router.get('/', getAllCategory);
-router.get('/:id', getACategory);
+router.get('/:id', authMiddleware, isAdmin, getACategory);
 router.post('/', authMiddleware, isAdmin, createCategory);
 router.put('/:id', authMiddleware, isAdmin, updateCategory);
 router.delete('/:id', authMiddleware, isAdmin, deleteCategory);
