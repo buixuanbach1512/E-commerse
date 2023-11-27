@@ -24,6 +24,7 @@ const {
     getOrder,
     updateOrder,
     getAllOrder,
+    getOrderbyId,
 } = require('../controllers/userController');
 const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware');
 const router = express.Router();
@@ -44,15 +45,18 @@ router.get('/cart', authMiddleware, getUserCart);
 router.delete('/empty-cart', authMiddleware, emptyCart);
 router.post('/cart/apply-coupon', authMiddleware, applyCoupon);
 router.post('/cart/order', authMiddleware, createOrder);
-router.get('/cart/all-order', authMiddleware, isAdmin, getAllOrder);
-router.get('/cart/order', authMiddleware, getOrder);
-router.put('/cart/order/:id', authMiddleware, isAdmin, updateOrder);
+
+// order
+router.get('/all-order', authMiddleware, isAdmin, getAllOrder);
+router.get('/order', authMiddleware, getOrder);
+router.get('/order/:id', authMiddleware, getOrderbyId);
+router.put('/order/:id', authMiddleware, isAdmin, updateOrder);
 
 // user
 router.get('/all-users', getAllUser);
+router.get('/wishlist', authMiddleware, getWishList);
 router.get('/:id', authMiddleware, isAdmin, getOneUser);
 router.put('/save-address', authMiddleware, saveAddress);
-router.get('/wishlist', authMiddleware, getWishList);
 router.put('/edit-user', authMiddleware, updateUser);
 router.delete('/:id', deleteUser);
 
