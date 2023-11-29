@@ -62,7 +62,7 @@ var productSchema = new mongoose.Schema(
             },
         ],
         totalRating: {
-            type: String,
+            type: Number,
             default: 0,
         },
     },
