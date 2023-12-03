@@ -328,12 +328,27 @@ const getUserCart = asyncHandler(async (req, res) => {
     }
 });
 
-const emptyCart = asyncHandler(async (req, res) => {
+const removeProdCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
+    const { id } = req.params;
     validateMongoDbId(_id);
     try {
-        const cart = await Cart.findOneAndRemove({ orderBy: _id });
-        res.json(cart);
+        const deleteProdCart = await Cart.deleteOne({ userId: _id, _id: id });
+        res.json(deleteProdCart);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
+
+const updateQuantityCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { id, quantity } = req.params;
+    validateMongoDbId(_id);
+    try {
+        const cartItem = await Cart.findOne({ userId: _id, _id: id });
+        cartItem.quantity = quantity;
+        cartItem.save();
+        res.json(cartItem);
     } catch (e) {
         throw new Error(e);
     }
@@ -469,7 +484,8 @@ module.exports = {
     saveAddress,
     addToCart,
     getUserCart,
-    emptyCart,
+    removeProdCart,
+    updateQuantityCart,
     applyCoupon,
     createOrder,
     getAllOrder,
