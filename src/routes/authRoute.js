@@ -18,14 +18,13 @@ const {
     saveAddress,
     addToCart,
     getUserCart,
-    applyCoupon,
     createOrder,
     getOrder,
-    updateOrder,
     getAllOrder,
     getOrderbyId,
     removeProdCart,
     updateQuantityCart,
+    emptyCart,
 } = require('../controllers/userController');
 const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware');
 const router = express.Router();
@@ -45,14 +44,14 @@ router.post('/add-to-cart', authMiddleware, addToCart);
 router.get('/cart', authMiddleware, getUserCart);
 router.put('/update-cart/:id/:quantity', authMiddleware, updateQuantityCart);
 router.delete('/delete-cart/:id', authMiddleware, removeProdCart);
-router.post('/cart/apply-coupon', authMiddleware, applyCoupon);
+router.delete('/empty-cart', authMiddleware, emptyCart);
 router.post('/cart/order', authMiddleware, createOrder);
 
 // order
 router.get('/all-order', authMiddleware, isAdmin, getAllOrder);
 router.get('/order', authMiddleware, getOrder);
 router.get('/order/:id', authMiddleware, getOrderbyId);
-router.put('/order/:id', authMiddleware, isAdmin, updateOrder);
+router.post('/create-order', authMiddleware, createOrder);
 
 // user
 router.get('/all-users', getAllUser);
