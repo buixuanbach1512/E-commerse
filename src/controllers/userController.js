@@ -43,9 +43,9 @@ const loginUser = asyncHandler(async (req, res) => {
             _id: findUser?._id,
             name: findUser?.name,
             email: findUser?.email,
+            address: findUser?.address,
             mobile: findUser?.mobile,
             token: generateToken(findUser?._id),
-            refreshToken: refreshToken,
         });
     } else {
         throw new Error('Invalid Credentials');
@@ -153,6 +153,7 @@ const updateUser = asyncHandler(async (req, res) => {
             {
                 name: req?.body.name,
                 email: req?.body.email,
+                address: req?.body.address,
                 mobile: req?.body.mobile,
             },
             {
@@ -239,7 +240,7 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
     try {
         const token = await findUser.createPasswordResetToken();
         await findUser.save();
-        const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid till 10 minutes from now. <a href='http://localhost:5000/api/user/reset-password/${token}'>Click Here</>`;
+        const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid till 10 minutes from now. <a href='http://localhost:8000/reset-password/${token}'>Click Here</>`;
         const data = {
             to: email,
             text: 'Hey User',
@@ -270,30 +271,11 @@ const resetPassword = asyncHandler(async (req, res) => {
 });
 
 const getWishList = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
     try {
-        const { _id } = req.user;
-        validateMongoDbId(_id);
         const findUser = await User.findById(_id).populate('wishlist');
         res.json(findUser);
-    } catch (e) {
-        throw new Error(e);
-    }
-});
-
-const saveAddress = asyncHandler(async (req, res) => {
-    try {
-        const { _id } = req.user;
-        validateMongoDbId(_id);
-        const updateUser = await User.findByIdAndUpdate(
-            { _id },
-            {
-                address: req?.body.address,
-            },
-            {
-                new: true,
-            },
-        );
-        res.json(updateUser);
     } catch (e) {
         throw new Error(e);
     }
@@ -404,7 +386,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
 const getAllOrder = asyncHandler(async (req, res) => {
     try {
-        const allOrder = await Order.find();
+        const allOrder = await Order.find().populate('user').populate('orderItems.product');
         res.json(allOrder);
     } catch (e) {
         throw new Error(e);
@@ -415,7 +397,10 @@ const getOrder = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     validateMongoDbId(_id);
     try {
-        const order = await Order.findOne({ user: _id });
+        const order = await Order.find({ user: _id })
+            .populate('user')
+            .populate('orderItems.product')
+            .populate('orderItems.color');
         res.json(order);
     } catch (e) {
         throw new Error(e);
@@ -448,7 +433,6 @@ module.exports = {
     forgotPasswordToken,
     resetPassword,
     getWishList,
-    saveAddress,
     addToCart,
     getUserCart,
     removeProdCart,

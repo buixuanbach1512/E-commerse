@@ -15,7 +15,6 @@ const {
     resetPassword,
     loginAdmin,
     getWishList,
-    saveAddress,
     addToCart,
     getUserCart,
     createOrder,
@@ -56,8 +55,7 @@ router.post('/create-order', authMiddleware, createOrder);
 // user
 router.get('/all-users', getAllUser);
 router.get('/wishlist', authMiddleware, getWishList);
-router.get('/:id', authMiddleware, isAdmin, getOneUser);
-router.put('/save-address', authMiddleware, saveAddress);
+router.get('/get-user/:id', authMiddleware, getOneUser);
 router.put('/edit-user', authMiddleware, updateUser);
 router.delete('/:id', deleteUser);
 

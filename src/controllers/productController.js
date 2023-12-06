@@ -26,7 +26,7 @@ const getAProduct = asyncHandler(async (req, res) => {
             .populate('brand')
             .populate('category')
             .populate('color')
-            .exec();
+            .populate('ratings.postedBy');
         res.json(getOne);
     } catch (e) {
         throw new Error(e);
