@@ -378,6 +378,16 @@ const createOrder = asyncHandler(async (req, res) => {
             totalPrice,
             totalPriceAfterDiscount,
         });
+        let userCart = await Cart.find({ userId: _id });
+        let update = userCart.map((item) => {
+            return {
+                updateOne: {
+                    filter: { _id: item.prodId._id },
+                    update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+                },
+            };
+        });
+        const updated = await Product.bulkWrite(update, {});
         res.json(order);
     } catch (error) {
         throw new Error(error);
