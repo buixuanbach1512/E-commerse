@@ -24,6 +24,9 @@ const {
     removeProdCart,
     updateQuantityCart,
     emptyCart,
+    getCountOrderByMonth,
+    getCountOrderByYear,
+    updateOrder,
 } = require('../controllers/userController');
 const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware');
 const router = express.Router();
@@ -49,7 +52,10 @@ router.post('/cart/order', authMiddleware, createOrder);
 // order
 router.get('/all-order', authMiddleware, isAdmin, getAllOrder);
 router.get('/order', authMiddleware, getOrder);
-router.get('/order/:id', authMiddleware, getOrderbyId);
+router.get('/order-by-month', authMiddleware, isAdmin, getCountOrderByMonth);
+router.get('/order-by-year', authMiddleware, isAdmin, getCountOrderByYear);
+router.get('/order/:id', authMiddleware, isAdmin, getOrderbyId);
+router.put('/order/:id', authMiddleware, isAdmin, updateOrder);
 router.post('/create-order', authMiddleware, createOrder);
 
 // user

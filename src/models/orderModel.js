@@ -35,9 +35,10 @@ var orderSchema = new mongoose.Schema(
             },
         ],
         orderedAt: { type: Date, default: Date.now() },
+        month: { type: String, default: new Date().getMonth() + 1 },
         totalPrice: { type: Number, required: true },
         totalPriceAfterDiscount: { type: Number, required: true },
-        orderStatus: { type: String, default: 'Ordered' },
+        orderStatus: { type: String, default: 'Đã đặt hàng' },
     },
     {
         timestamps: true,
