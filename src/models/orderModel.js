@@ -39,6 +39,7 @@ var orderSchema = new mongoose.Schema(
         totalPrice: { type: Number, required: true },
         totalPriceAfterDiscount: { type: Number, required: true },
         orderStatus: { type: String, default: 'Đã đặt hàng' },
+        payment: String
     },
     {
         timestamps: true,

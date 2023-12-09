@@ -48,7 +48,7 @@ const loginUser = asyncHandler(async (req, res) => {
             token: generateToken(findUser?._id),
         });
     } else {
-        throw new Error('Invalid Credentials');
+        throw new Error('Thông tin không hợp lệ');
     }
 });
 
@@ -367,7 +367,7 @@ const emptyCart = asyncHandler(async (req, res) => {
 // });
 
 const createOrder = asyncHandler(async (req, res) => {
-    const { shippingInfo, orderItems, totalPrice, totalPriceAfterDiscount } = req.body;
+    const { shippingInfo, orderItems, totalPrice, totalPriceAfterDiscount, payment } = req.body;
     const { _id } = req.user;
     validateMongoDbId(_id);
     try {
@@ -377,6 +377,7 @@ const createOrder = asyncHandler(async (req, res) => {
             orderItems,
             totalPrice,
             totalPriceAfterDiscount,
+            payment
         });
         let userCart = await Cart.find({ userId: _id });
         let update = userCart.map((item) => {
