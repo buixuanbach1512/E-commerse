@@ -6,6 +6,7 @@ const slugify = require('slugify');
 const validateMongoDbId = require('../utils/validateMongoDbId');
 const cloudinaryUploadImg = require('../utils/cloundinary');
 const fs = require('fs');
+const cloudinary = require('cloudinary');
 
 const createProduct = asyncHandler(async (req, res) => {
     try {
@@ -171,8 +172,17 @@ const rating = asyncHandler(async (req, res) => {
 });
 
 const deleteProduct = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    validateMongoDbId(id);
+    cloudinary.config({
+        cloud_name: process.env.CLOUD_NAME,
+        api_key: process.env.API_KEY,
+        api_secret: process.env.API_SECRET,
+    });
     try {
-        const { id } = req.params;
+        const aProd = await Product.findById(id);
+        const imgId = aProd.images[0].public_id;
+        await cloudinary.uploader.destroy(imgId, 'images');
         const deletePro = await Product.findByIdAndDelete({ _id: id });
         res.json({
             message: 'Delete Product Successfully',

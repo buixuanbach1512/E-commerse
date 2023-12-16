@@ -19,6 +19,12 @@ const multerFilter = (req, file, cb) => {
         cb({ message: 'Unsupported file format' }, false);
     }
 };
+
+const uploadPhoto = multer({
+    storage: storage,
+    fileFilter: multerFilter,
+    limits: { fileSize: 2000000 },
+});
 const productImgResize = async (req, res, next) => {
     if (!req.files) return next();
     await Promise.all(
@@ -34,9 +40,4 @@ const productImgResize = async (req, res, next) => {
     next();
 };
 
-const uploadPhoto = multer({
-    storage: storage,
-    fileFilter: multerFilter,
-    limits: { fileSize: 1000000 },
-});
 module.exports = { uploadPhoto, productImgResize };
