@@ -27,26 +27,30 @@ const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const findUser = await User.findOne({ email });
     if (findUser && (await findUser.isPasswordMatched(password))) {
-        const refreshToken = generateRefreshToken(findUser._id);
-        const updateUser = await User.findByIdAndUpdate(
-            findUser._id,
-            {
-                refreshToken: refreshToken,
-            },
-            { new: true },
-        );
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            maxAge: 12 * 60 * 60 * 1000,
-        });
-        res.json({
-            _id: findUser?._id,
-            name: findUser?.name,
-            email: findUser?.email,
-            address: findUser?.address,
-            mobile: findUser?.mobile,
-            token: generateToken(findUser?._id),
-        });
+        if (findUser.isBlocked === false) {
+            const refreshToken = generateRefreshToken(findUser._id);
+            const updateUser = await User.findByIdAndUpdate(
+                findUser._id,
+                {
+                    refreshToken: refreshToken,
+                },
+                { new: true },
+            );
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                maxAge: 12 * 60 * 60 * 1000,
+            });
+            res.json({
+                _id: findUser?._id,
+                name: findUser?.name,
+                email: findUser?.email,
+                address: findUser?.address,
+                mobile: findUser?.mobile,
+                token: generateToken(findUser?._id),
+            });
+        } else {
+            throw new Error('Tài khoản đã bị khóa!!!');
+        }
     } else {
         throw new Error('Thông tin không hợp lệ');
     }
@@ -173,7 +177,7 @@ const deleteUser = asyncHandler(async (req, res) => {
         const deleteUser = await User.findByIdAndDelete({ _id: id });
         res.json(deleteUser);
     } catch (e) {
-        throw new Error(e);
+        throw new Error(JSON.stringify(e));
     }
 });
 
@@ -347,24 +351,27 @@ const emptyCart = asyncHandler(async (req, res) => {
     }
 });
 
-// const applyCoupon = asyncHandler(async (req, res) => {
-//     const { _id } = req.user;
-//     validateMongoDbId(_id);
-//     const { coupon } = req.body;
-//     try {
-//         const validCoupon = await Coupon.findOne({ name: coupon });
-//         if (validCoupon === null) {
-//             throw new Error('Invalid Coupon');
-//         }
-//         const user = await User.findById(_id);
-//         let { products, cartTotal } = await Cart.findOne({ orderBy: user._id }).populate('products.product');
-//         let totalAfterDiscount = (cartTotal - (cartTotal * validCoupon.discount) / 100).toFixed(2);
-//         await Cart.findOneAndUpdate({ orderBy: user._id }, { totalAfterDiscount }, { new: true });
-//         res.json(totalAfterDiscount);
-//     } catch (e) {
-//         throw new Error(e);
-//     }
-// });
+const applyCoupon = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
+    const { coupon } = req.body;
+    try {
+        const validCoupon = await Coupon.findOne({ code: coupon });
+        if (validCoupon === null) {
+            throw new Error('Mã giảm giá không tồn tại');
+        }
+        const user = await User.findById(_id);
+        const cartUser = await Cart.find({ userId: user._id });
+        let cartTotal = 0;
+        for (let i = 0; i < cartUser.length; i++) {
+            cartTotal = cartTotal + cartUser[i].quantity * cartUser[i].price;
+        }
+        let totalAfterDiscount = (cartTotal - (cartTotal * validCoupon.discount) / 100).toFixed(0);
+        res.json(totalAfterDiscount);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
 
 const createOrder = asyncHandler(async (req, res) => {
     const { shippingInfo, orderItems, totalPrice, totalPriceAfterDiscount, payment } = req.body;
@@ -377,7 +384,7 @@ const createOrder = asyncHandler(async (req, res) => {
             orderItems,
             totalPrice,
             totalPriceAfterDiscount,
-            payment
+            payment,
         });
         let userCart = await Cart.find({ userId: _id });
         let update = userCart.map((item) => {
@@ -559,6 +566,7 @@ module.exports = {
     removeProdCart,
     updateQuantityCart,
     emptyCart,
+    applyCoupon,
     createOrder,
     getAllOrder,
     getOrder,

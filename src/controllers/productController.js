@@ -27,7 +27,8 @@ const getAProduct = asyncHandler(async (req, res) => {
             .populate('brand')
             .populate('category')
             .populate('color')
-            .populate('ratings.postedBy');
+            .populate('ratings.postedBy')
+            .populate('size');
         res.json(getOne);
     } catch (e) {
         throw new Error(e);
@@ -95,7 +96,6 @@ const updateProduct = asyncHandler(async (req, res) => {
 const addToWishlist = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     const { prodId } = req.body;
-    console.log(prodId);
     try {
         const user = await User.findById(_id);
         const alreadyadded = user.wishlist.find((id) => id.toString() === prodId);
@@ -174,15 +174,9 @@ const rating = asyncHandler(async (req, res) => {
 const deleteProduct = asyncHandler(async (req, res) => {
     const { id } = req.params;
     validateMongoDbId(id);
-    cloudinary.config({
-        cloud_name: process.env.CLOUD_NAME,
-        api_key: process.env.API_KEY,
-        api_secret: process.env.API_SECRET,
-    });
     try {
         const aProd = await Product.findById(id);
         const imgId = aProd.images[0].public_id;
-        await cloudinary.uploader.destroy(imgId, 'images');
         const deletePro = await Product.findByIdAndDelete({ _id: id });
         res.json({
             message: 'Delete Product Successfully',
@@ -192,34 +186,6 @@ const deleteProduct = asyncHandler(async (req, res) => {
     }
 });
 
-// const uploadImage = asyncHandler(async (req, res) => {
-//     const { id } = req.params;
-//     validateMongoDbId(id);
-//     try {
-//         const uploader = (path) => cloudinaryUploadImg(path, 'images');
-//         const urls = [];
-//         const files = req.files;
-//         for (const file of files) {
-//             const { path } = file;
-//             const newpath = await uploader(path);
-//             urls.push(newpath);
-//             fs.unlinkSync(path);
-//         }
-//         const findProduct = await Product.findByIdAndUpdate(
-//             id,
-//             {
-//                 image: urls.map((file) => {
-//                     return file;
-//                 }),
-//             },
-//             { new: true },
-//         );
-//         res.json(findProduct);
-//     } catch (e) {
-//         throw new Error(e);
-//     }
-// });
-
 module.exports = {
     createProduct,
     getAProduct,
@@ -228,5 +194,4 @@ module.exports = {
     deleteProduct,
     addToWishlist,
     rating,
-    // uploadImage,
 };

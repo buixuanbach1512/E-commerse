@@ -50,6 +50,12 @@ var productSchema = new mongoose.Schema(
                 ref: 'Color',
             },
         ],
+        size: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Size',
+            },
+        ],
         tags: String,
         ratings: [
             {

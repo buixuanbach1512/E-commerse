@@ -8,18 +8,11 @@ var orderSchema = new mongoose.Schema(
             ref: 'User',
         },
         shippingInfo: {
-            firstName: { type: String, required: true },
-            lastName: { type: String, required: true },
+            name: { type: String, required: true },
             address: { type: String, required: true },
-            province: { type: String, required: true },
-            country: { type: String, required: true },
-            other: { type: String, required: true },
-            zipCode: { type: Number, required: true },
+            mobile: { type: String, required: true },
+            other: { type: String, default: null },
         },
-        // paymentInfo: {
-        //     orderId: { type: String, required: true },
-        //     paymentId: { type: String, required: true },
-        // },
         orderItems: [
             {
                 product: {
@@ -39,7 +32,7 @@ var orderSchema = new mongoose.Schema(
         totalPrice: { type: Number, required: true },
         totalPriceAfterDiscount: { type: Number, required: true },
         orderStatus: { type: String, default: 'Đã đặt hàng' },
-        payment: String
+        payment: String,
     },
     {
         timestamps: true,

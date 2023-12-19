@@ -27,6 +27,7 @@ const {
     getCountOrderByMonth,
     getCountOrderByYear,
     updateOrder,
+    applyCoupon,
 } = require('../controllers/userController');
 const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware');
 const router = express.Router();
@@ -48,6 +49,7 @@ router.put('/update-cart/:id/:quantity', authMiddleware, updateQuantityCart);
 router.delete('/delete-cart/:id', authMiddleware, removeProdCart);
 router.delete('/empty-cart', authMiddleware, emptyCart);
 router.post('/cart/order', authMiddleware, createOrder);
+router.post('/cart/applyCoupon', authMiddleware, applyCoupon);
 
 // order
 router.get('/all-order', authMiddleware, isAdmin, getAllOrder);

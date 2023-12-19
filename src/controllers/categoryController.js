@@ -56,4 +56,22 @@ const deleteCategory = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { createCategory, getAllCategory, getACategory, updateCategory, deleteCategory };
+const getProductCate = asyncHandler(async (req, res) => {
+    try {
+        const pCate = await Category.aggregate([
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: '_id',
+                    foreignField: 'category',
+                    as: 'productList',
+                },
+            },
+        ]);
+        res.json(pCate);
+    } catch (e) {
+        throw new Error(e);
+    }
+});
+
+module.exports = { createCategory, getAllCategory, getACategory, updateCategory, deleteCategory, getProductCate };
